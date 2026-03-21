@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
   "flask",
+  "python-json-logger",
   "opentelemetry-distro",
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-instrumentation-asyncio==0.61b0",
