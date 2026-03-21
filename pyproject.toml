@@ -1,0 +1,21 @@
+[project]
+name = "07-observability"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "flask",
+  "opentelemetry-distro",
+  "opentelemetry-exporter-otlp-proto-grpc",
+  "opentelemetry-instrumentation-asyncio==0.61b0",
+  "opentelemetry-instrumentation-click==0.61b0",
+  "opentelemetry-instrumentation-dbapi==0.61b0",
+  "opentelemetry-instrumentation-flask==0.61b0",
+  "opentelemetry-instrumentation-jinja2==0.61b0",
+  "opentelemetry-instrumentation-logging==0.61b0",
+  "opentelemetry-instrumentation-sqlite3==0.61b0",
+  "opentelemetry-instrumentation-threading==0.61b0",
+  "opentelemetry-instrumentation-urllib==0.61b0",
+  "opentelemetry-instrumentation-wsgi==0.61b0",
+]

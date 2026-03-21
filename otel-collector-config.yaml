@@ -1,0 +1,25 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+exporters:
+  debug:
+    verbosity: basic
+  otlp_grpc:
+    endpoint: "aspire:18889"
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      exporters: [debug, otlp_grpc]
+    metrics:
+      receivers: [otlp]
+      exporters: [debug, otlp_grpc]
+    traces:
+      receivers: [otlp]
+      exporters: [debug, otlp_grpc]
