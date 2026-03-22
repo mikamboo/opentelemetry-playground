@@ -11,16 +11,54 @@ services:
       - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
     ports:
       - "4317:4317"
-    # depends_on:
-    #   - aspire
 
-  app:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  app-api:
     build: .
     ports:
       - "8082:8082"
     environment:
-      OTEL_SERVICE_NAME: dice-service
+      OTEL_SERVICE_NAME: bank-api
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      REDIS_HOST: redis
+      DB_PATH: /data/bank.db
+    volumes:
+      - bank-data:/data
     depends_on:
       - otel-collector
+      - redis
+
+  app-worker:
+    build: .
+    command: ["uv", "run", "opentelemetry-instrument", "python", "app-worker.py"]
+    environment:
+      OTEL_SERVICE_NAME: transfer-worker
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      REDIS_HOST: redis
+      DB_PATH: /data/bank.db
+    volumes:
+      - bank-data:/data
+    depends_on:
+      - otel-collector
+      - redis
+      - app-api   # ensures db is initialised by app-api first
+
+  app-frontend:
+    image: nginx:alpine
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app-frontend/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./app-frontend/index.html:/usr/share/nginx/html/index.html
+    depends_on:
+      - otel-collector
+      - app-api
+
+volumes:
+  bank-data:

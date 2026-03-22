@@ -7,6 +7,7 @@ requires-python = ">=3.10"
 dependencies = [
   "flask",
   "python-json-logger",
+  "redis",
   "opentelemetry-distro",
   "opentelemetry-exporter-otlp-proto-grpc",
   "opentelemetry-instrumentation-asyncio==0.61b0",
@@ -15,6 +16,7 @@ dependencies = [
   "opentelemetry-instrumentation-flask==0.61b0",
   "opentelemetry-instrumentation-jinja2==0.61b0",
   "opentelemetry-instrumentation-logging==0.61b0",
+  "opentelemetry-instrumentation-redis==0.61b0",
   "opentelemetry-instrumentation-sqlite3==0.61b0",
   "opentelemetry-instrumentation-threading==0.61b0",
   "opentelemetry-instrumentation-urllib==0.61b0",

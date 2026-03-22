@@ -4,25 +4,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-OpenTelemetry observability demonstration with a Flask app. Demonstrates both auto-instrumentation and manual instrumentation, with support for exporting telemetry (logs, metrics, traces) via an OpenTelemetry collector.
+OpenTelemetry observability demonstration with a banking-themed Flask app. Showcases auto-instrumentation and manual distributed tracing across an HTTP API, SQLite database, Redis queue, and a background worker.
 
 ## Key Files & Architecture
 
-- **app.py** - Flask application with a `/rolldice` endpoint. Manual instrumentation can be enabled by uncommenting lines 4 and 11.
-- **otel-collector-config.yaml** - OpenTelemetry collector configuration receiving OTLP data on port 4317, forwarding to Aspire dashboard.
-- **pyproject.toml** - Dependencies including Flask and OpenTelemetry instrumentation packages (auto-instrumentation enabled via `opentelemetry-distro`).
+**Banking demo (multi-service):**
+- **app-api.py** - Flask API with banking endpoints (`/api/accounts`, `/api/transfer`, `/api/transactions`). Injects OTel trace context into Redis jobs for distributed tracing.
+- **app-worker.py** - Transfer queue worker. Pops jobs from Redis, extracts OTel context, processes SQLite updates inside a linked `CONSUMER` span.
+- **app-frontend/** - nginx serving the single-page frontend (`index.html`) and proxying `/api/` to `app-api`.
+- **db.py** - SQLite helpers (`init_db`, `get_connection`). Database path via `DB_PATH` env var (default `bank.db`).
+
+**Original dice-roller demo:**
+- **app.py** - Simple Flask app with `/rolldice`. Starting point for OTel instrumentation (manual via commented `FlaskInstrumentor`).
+
+**Infrastructure:**
+- **otel-collector-config.yaml** - Collector receiving OTLP on port 4317, forwarding to Aspire dashboard (`aspire:18889`).
+- **docker-compose.yaml** - Full stack: `aspire`, `otel-collector`, `redis`, `app-api`, `app-worker`, `app-frontend`. API and worker share a `bank-data` volume for SQLite.
 
 ## Quick Start
 
-Install dependencies:
-
 ```bash
 uv sync
+docker compose up --build
 ```
 
-See README.md for detailed setup instructions, including:
+- Frontend: http://localhost:8080
+- API: http://localhost:8082
+- Aspire dashboard: http://localhost:18888
 
-- Running the Flask app locally
-- Running with auto-instrumentation or manual instrumentation
-- Running the OpenTelemetry collector and Aspire dashboard
-- Enabling specific instrumentation packages
+See README.md for step-by-step manual setup and instrumentation details.

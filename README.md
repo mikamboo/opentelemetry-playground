@@ -2,6 +2,8 @@
 
 Hands-on demonstration of OpenTelemetry with a simple Flask app. Covers auto-instrumentation, manual instrumentation, and forwarding telemetry (logs, metrics, traces) to a dashboard via an OpenTelemetry collector.
 
+For the banking demo architecture and end-to-end observability details, see [BANK_APP_OBSERVABILITY.md](BANK_APP_OBSERVABILITY.md).
+
 ## Architecture
 
 Otel Pipeline:
@@ -12,7 +14,6 @@ Flask App --> OpenTelemetry Collector --> Aspire Dashboard
 
 ![Architecture Diagram](images/otel_flask_architecture.svg)
 
-
 ## Option A — Full stack with Docker Compose
 
 The fastest way to get everything running:
@@ -22,6 +23,7 @@ docker compose up --build
 ```
 
 Then open:
+
 - **App:** http://localhost:8082/rolldice
 - **Dashboard:** http://localhost:18888
 
@@ -43,6 +45,7 @@ uv run flask --app app run --port 8082
 ```
 
 Test it:
+
 ```bash
 curl http://localhost:8082/rolldice
 ```
@@ -91,9 +94,11 @@ uv run opentelemetry-instrument \
 Hit the endpoint again and check the Aspire dashboard — you should now see traces, metrics, and logs.
 
 > **First time only:** if instrumentation packages are missing, install them with:
+>
 > ```bash
 > uv run opentelemetry-bootstrap -a requirements | xargs uv add
 > ```
+>
 > (Use `-a requirements`, not `-a install` — the latter invokes `pip` which fails in `uv` environments.)
 
 ### Step 5 (optional) — Switch to manual instrumentation
@@ -130,6 +135,12 @@ Add to your VSCode `settings.json` to send Copilot Chat telemetry to the collect
 See: https://ohmytech.netlify.app/blog/2026/03/17/copilot-monitor-agent-usage-with-opentelemetry
 
 ---
+
+## Banking Demo Architecture
+
+Check out the [BANK_APP_ARCHI.md](BANK_APP_ARCHI.md) and [BANK_APP_OBSERVABILITY.md](BANK_APP_OBSERVABILITY.md) files for architecture diagrams, component summaries, and detailed request flow with OpenTelemetry tracing across the entire stack.
+
+![Request Flow Diagram](images/otel_bank_e2e_trace.png)
 
 ## References
 
