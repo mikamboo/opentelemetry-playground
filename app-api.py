@@ -47,24 +47,31 @@ def transfer():
     if amount <= 0:
         return jsonify({"error": "Amount must be positive"}), 400
 
-    with db.get_connection() as conn:
-        from_acc = conn.execute(
-            "SELECT * FROM accounts WHERE id = ?", (from_id,)
-        ).fetchone()
-        to_acc = conn.execute(
-            "SELECT * FROM accounts WHERE id = ?", (to_id,)
-        ).fetchone()
-
-        if not from_acc or not to_acc:
-            return jsonify({"error": "Account not found"}), 404
-        if from_acc["balance"] < amount:
-            return jsonify({"error": "Insufficient funds"}), 400
-
-        cursor = conn.execute(
-            "INSERT INTO transactions (from_account, to_account, amount, status) VALUES (?, ?, ?, 'pending')",
-            (from_id, to_id, amount),
+    with tracer.start_as_current_span("transfer.create") as create_span:
+        create_span.set_attributes(
+            {"tx.from": from_id, "tx.to": to_id, "tx.amount": amount}
         )
-        tx_id = cursor.lastrowid
+        with db.get_connection() as conn:
+            from_acc = conn.execute(
+                "SELECT * FROM accounts WHERE id = ?", (from_id,)
+            ).fetchone()
+            to_acc = conn.execute(
+                "SELECT * FROM accounts WHERE id = ?", (to_id,)
+            ).fetchone()
+
+            if not from_acc or not to_acc:
+                create_span.set_status(StatusCode.ERROR, "Account not found")
+                return jsonify({"error": "Account not found"}), 404
+            if from_acc["balance"] < amount:
+                create_span.set_status(StatusCode.ERROR, "Insufficient funds")
+                return jsonify({"error": "Insufficient funds"}), 400
+
+            cursor = conn.execute(
+                "INSERT INTO transactions (from_account, to_account, amount, status) VALUES (?, ?, ?, 'pending')",
+                (from_id, to_id, amount),
+            )
+            tx_id = cursor.lastrowid
+            create_span.set_attribute("tx.id", tx_id)
 
     with tracer.start_as_current_span(
         "redis.rpush transfers", kind=SpanKind.PRODUCER
@@ -105,15 +112,21 @@ def transfer():
 
 @app.route("/api/transactions")
 def get_transactions():
-    with db.get_connection() as conn:
-        rows = conn.execute(
+    with tracer.start_as_current_span("db.query transactions") as span:
+        with db.get_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT t.*, a1.name AS from_name, a2.name AS to_name
+                FROM transactions t
+                JOIN accounts a1 ON t.from_account = a1.id
+                JOIN accounts a2 ON t.to_account = a2.id
+                ORDER BY t.created_at DESC
+                LIMIT 20
             """
-            SELECT t.*, a1.name AS from_name, a2.name AS to_name
-            FROM transactions t
-            JOIN accounts a1 ON t.from_account = a1.id
-            JOIN accounts a2 ON t.to_account = a2.id
-            ORDER BY t.created_at DESC
-            LIMIT 20
-        """
-        ).fetchall()
+            ).fetchall()
+        span.set_attribute("transactions.count", len(rows))
+        if rows:
+            span.set_attribute("transactions.latest_id", rows[0]["id"])
+            statuses = list({row["status"] for row in rows})
+            span.set_attribute("transactions.statuses", ",".join(statuses))
     return jsonify([dict(row) for row in rows])
