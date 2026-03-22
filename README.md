@@ -2,11 +2,13 @@
 
 Hands-on demonstration of OpenTelemetry with a simple Flask app. Covers auto-instrumentation, manual instrumentation, and forwarding telemetry (logs, metrics, traces) to a dashboard via an OpenTelemetry collector.
 
+![Distributed App Observability](images/otel_bank_observability.png)
+
 For the banking demo architecture and end-to-end observability details, see [BANK_APP_OBSERVABILITY.md](BANK_APP_OBSERVABILITY.md).
 
 ## Architecture
 
-Otel Pipeline:
+Simple Otel Pipeline:
 
 ```
 Flask App --> OpenTelemetry Collector --> Aspire Dashboard
