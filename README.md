@@ -95,13 +95,19 @@ uv run opentelemetry-instrument \
 
 Hit the endpoint again and check the Aspire dashboard — you should now see traces, metrics, and logs.
 
-> **First time only:** if instrumentation packages are missing, install them with:
+> **First time only:** install the core OTel packages and then bootstrap all instrumentation libraries:
 >
 > ```bash
-> uv run opentelemetry-bootstrap -a requirements | xargs uv add
+> # Install core packages
+> uv add opentelemetry-distro opentelemetry-exporter-otlp
+>
+> # Install auto-instrumentation libraries detected for this project
+> uv run opentelemetry-bootstrap -a requirements | uv add --requirement -
 > ```
 >
 > (Use `-a requirements`, not `-a install` — the latter invokes `pip` which fails in `uv` environments.)
+>
+> Reference: https://opentelemetry.io/docs/zero-code/python/troubleshooting/#bootstrap-using-uv
 
 ### Step 5 (optional) — Switch to manual instrumentation
 
